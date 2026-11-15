@@ -1,10 +1,15 @@
 # Capstone Self-Evaluation Report
 
+- Participant: **Navya Sree**
+- Project repository: `Fraud-investigation-Agent` (working copy: `dEVINCAPSTONE`)
+- Evaluation date: **2026-11-15**
+- Evaluator role: Senior Java AI solution architect / BFS fraud-domain reviewer / secure-code reviewer / test architect (Devin self-evaluation, per `Devin_Self_Evaluation_Prompt_Fraud_Capstone.md`)
+
 ## 1. Executive Summary
 - Project: Intelligent Payment Fraud Investigation & Dispute Resolution Agent (`com.capstone:fraud-case-agent` 1.0.0)
 - Primary framework: Spring AI 1.1.8 (`OpenAiChatModel` against an OpenAI-compatible gateway fronting Anthropic Claude)
 - Secondary framework: LangChain4j 1.22.0 (AI Services + `dev.langchain4j.model.openai.OpenAiChatModel`), plus a deterministic `rules` processor as the safety baseline
-- Build status: `mvn clean test` → **BUILD SUCCESS** (verified 2026-11-15, ~60 s)
+- Build status: `mvn clean test` → **BUILD SUCCESS** (verified 2026-11-15, ~90 s)
 - Test status: **52 tests run, 0 failures, 0 errors, 0 skipped**
 - Overall score: 95/100
 - Percentage: 95%
