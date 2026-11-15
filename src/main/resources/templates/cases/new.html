@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('New case')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <h1>Fraud case intake</h1>
+    <p class="hint">Use masked or tokenised references only. Full card or account numbers, markup and scripts are rejected. Case ID, report time and analyst identity are assigned by the server.</p>
+    <div class="flash error" role="alert" th:if="${errors != null and !errors.isEmpty()}" id="error-summary" tabindex="-1">
+        <p><strong>Please correct the highlighted fields:</strong></p>
+        <ul><li th:each="e : ${errors}"><a th:href="'#' + ${e.key}" th:text="${e.key} + ': ' + ${e.value}"></a></li></ul>
+    </div>
+    <div class="toolbar">
+        <button type="button" class="secondary" data-sample="TXN-2026-784102">Load sample: unrecognised CNP purchase</button>
+        <button type="button" class="secondary" data-sample="TXN-2026-510233">Sample: goods not received</button>
+        <button type="button" class="secondary" data-sample="TXN-2026-620871">Sample: duplicate charge</button>
+        <button type="button" class="secondary" data-sample="TXN-2026-730455">Sample: contradictory signals</button>
+        <button type="button" class="secondary" data-sample="TXN-2026-950007">Sample: device tool timeout</button>
+        <button type="button" class="secondary" data-sample="TXN-2026-118204">Sample: prompt injection</button>
+        <button type="button" class="secondary" data-draft="save">Save draft (this browser)</button>
+        <button type="button" class="secondary" data-draft="load">Restore draft</button>
+        <span id="draft-status" role="status" aria-live="polite" class="hint"></span>
+    </div>
+    <form id="intake-form" th:action="@{/cases}" th:object="${form}" method="post" class="card grid-form" novalidate>
+        <fieldset>
+            <legend>Customer</legend>
+            <div class="field" th:classappend="${errors?.containsKey('maskedCustomerRef')} ? 'invalid'">
+                <label for="maskedCustomerRef">Masked customer reference *</label>
+                <input id="maskedCustomerRef" th:field="*{maskedCustomerRef}" placeholder="CUST-••••-4821" required aria-describedby="maskedCustomerRef-help">
+                <small id="maskedCustomerRef-help">Format CUST-••••-1234 (or CUST-****-1234)</small>
+                <small class="err" th:if="${errors?.containsKey('maskedCustomerRef')}" th:text="${errors['maskedCustomerRef']}"></small>
+            </div>
+            <div class="field" th:classappend="${errors?.containsKey('homeRegion')} ? 'invalid'">
+                <label for="homeRegion">Home region (optional)</label>
+                <input id="homeRegion" th:field="*{homeRegion}" placeholder="IN-MH Mumbai" aria-describedby="homeRegion-help">
+                <small id="homeRegion-help">Leave blank to use the synthetic customer profile</small>
+                <small class="err" th:if="${errors?.containsKey('homeRegion')}" th:text="${errors['homeRegion']}"></small>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Transaction</legend>
+            <div class="field" th:classappend="${errors?.containsKey('transactionRef')} ? 'invalid'">
+                <label for="transactionRef">Transaction reference *</label>
+                <input id="transactionRef" th:field="*{transactionRef}" placeholder="TXN-2026-784102" required>
+                <small class="err" th:if="${errors?.containsKey('transactionRef')}" th:text="${errors['transactionRef']}"></small>
+            </div>
+            <div class="field" th:classappend="${errors?.containsKey('amount')} ? 'invalid'">
+                <label for="amount">Amount *</label>
+                <input id="amount" th:field="*{amount}" inputmode="decimal" placeholder="48750.00" required>
+                <small class="err" th:if="${errors?.containsKey('amount')}" th:text="${errors['amount']}"></small>
+            </div>
+            <div class="field" th:classappend="${errors?.containsKey('currency')} ? 'invalid'">
+                <label for="currency">Currency (ISO 4217) *</label>
+                <input id="currency" th:field="*{currency}" maxlength="3" required>
+                <small class="err" th:if="${errors?.containsKey('currency')}" th:text="${errors['currency']}"></small>
+            </div>
+            <div class="field" th:classappend="${errors?.containsKey('occurredAt')} ? 'invalid'">
+                <label for="occurredAt">Occurred at *</label>
+                <input id="occurredAt" type="datetime-local" th:field="*{occurredAt}" required>
+                <label for="utcOffset" class="sub">UTC offset</label>
+                <select id="utcOffset" th:field="*{utcOffset}">
+                    <option value="+05:30">+05:30 (IST)</option><option value="Z">UTC</option><option value="+04:00">+04:00</option>
+                    <option value="+08:00">+08:00</option><option value="+01:00">+01:00</option><option value="-05:00">-05:00</option>
+                </select>
+                <small class="err" th:if="${errors?.containsKey('occurredAt')}" th:text="${errors['occurredAt']}"></small>
+            </div>
+            <div class="field" th:classappend="${errors?.containsKey('status')} ? 'invalid'">
+                <label for="status">Transaction status *</label>
+                <select id="status" th:field="*{status}" required>
+                    <option value="">Select...</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"></option>
+                </select>
+                <small class="err" th:if="${errors?.containsKey('status')}" th:text="${errors['status']}"></small>
+            </div>
+            <div class="field" th:classappend="${errors?.containsKey('channel')} ? 'invalid'">
+                <label for="channel">Payment channel *</label>
+                <select id="channel" th:field="*{channel}" required>
+                    <option value="">Select...</option>
+                    <option th:each="s : ${channels}" th:value="${s}" th:text="${s}"></option>
+                </select>
+                <small class="err" th:if="${errors?.containsKey('channel')}" th:text="${errors['channel']}"></small>
+            </div>
+            <div class="field wide" th:classappend="${errors?.containsKey('maskedMerchant')} ? 'invalid'">
+                <label for="maskedMerchant">Masked merchant *</label>
+                <input id="maskedMerchant" th:field="*{maskedMerchant}" placeholder="NORTHSTAR DIGITAL ••••73" required>
+                <small class="err" th:if="${errors?.containsKey('maskedMerchant')}" th:text="${errors['maskedMerchant']}"></small>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Claim</legend>
+            <div class="field" th:classappend="${errors?.containsKey('issueType')} ? 'invalid'">
+                <label for="issueType">Issue type *</label>
+                <select id="issueType" th:field="*{issueType}" required>
+                    <option value="">Select...</option>
+                    <option th:each="s : ${issueTypes}" th:value="${s}" th:text="${s}"></option>
+                </select>
+                <small class="err" th:if="${errors?.containsKey('issueType')}" th:text="${errors['issueType']}"></small>
+            </div>
+            <div class="field">
+                <label for="cardPossession">Card possession</label>
+                <select id="cardPossession" th:field="*{cardPossession}">
+                    <option th:each="s : ${possessions}" th:value="${s}" th:text="${s}"></option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="merchantRecognised">Merchant recognised?</label>
+                <select id="merchantRecognised" th:field="*{merchantRecognised}">
+                    <option value="">Derive from issue type</option><option value="true">Yes</option><option value="false">No</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="intakeChannel">Intake channel</label>
+                <select id="intakeChannel" th:field="*{intakeChannel}">
+                    <option th:each="s : ${intakeChannels}" th:value="${s}" th:text="${s}"></option>
+                </select>
+            </div>
+            <div class="field wide" th:classappend="${errors?.containsKey('customerStatement')} ? 'invalid'">
+                <label for="customerStatement">Customer statement * (10-1000 characters, recorded as an unverified claim)</label>
+                <textarea id="customerStatement" th:field="*{customerStatement}" rows="4" maxlength="1000" required></textarea>
+                <small class="err" th:if="${errors?.containsKey('customerStatement')}" th:text="${errors['customerStatement']}"></small>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Consent and control</legend>
+            <div class="check" th:classappend="${errors?.containsKey('syntheticDataConfirmed')} ? 'invalid'">
+                <input type="checkbox" id="syntheticDataConfirmed" th:field="*{syntheticDataConfirmed}">
+                <label for="syntheticDataConfirmed">I confirm this case uses synthetic training data only *</label>
+                <small class="err" th:if="${errors?.containsKey('syntheticDataConfirmed')}" th:text="${errors['syntheticDataConfirmed']}"></small>
+            </div>
+            <div class="check">
+                <input type="checkbox" id="reviewRequired" th:field="*{reviewRequired}" disabled>
+                <input type="hidden" name="reviewRequired" value="true">
+                <label for="reviewRequired">Human review required (always on)</label>
+            </div>
+        </fieldset>
+        <div class="actions">
+            <button type="submit" name="action" value="create" class="secondary" sec:authorize="hasRole('INVESTIGATOR')">Create case</button>
+            <button type="submit" name="action" value="create" class="primary" sec:authorize="hasRole('SERVICE_AGENT')">Create case &amp; hand off to investigator</button>
+            <button type="submit" name="action" value="investigate" class="primary" data-busy="Running investigation..." sec:authorize="hasRole('INVESTIGATOR')">Create &amp; start investigation</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

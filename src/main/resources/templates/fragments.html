@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · Fraud Investigation Agent'">Fraud Investigation Agent</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/js/app.js}" defer></script>
+</head>
+<body>
+
+<div th:fragment="header">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div class="synthetic-banner" role="note">SYNTHETIC TRAINING DATA ONLY · Recommendations are advisory · No card blocks, refunds, fund movements, reports or customer contact are ever executed automatically</div>
+    <header class="topbar">
+        <a class="brand" th:href="@{/cases}">Payment Fraud Investigation &amp; Dispute Agent</a>
+        <nav aria-label="Primary">
+            <a th:href="@{/cases}">Cases</a>
+            <a th:href="@{/cases/new}" sec:authorize="hasAnyRole('SERVICE_AGENT','INVESTIGATOR')">New case</a>
+            <a th:href="@{/policies}">Policy library</a>
+            <a th:href="@{/audit}" sec:authorize="hasAnyRole('AUDITOR','REVIEWER')">Audit trail</a>
+        </nav>
+        <div class="userbox">
+            <span class="mode-chip" th:title="'Model: ' + ${llmModel}">Mode: <strong th:text="${configuredMode}">rules</strong></span>
+            <span sec:authentication="name">user</span>
+            <span class="persona">
+                <span sec:authorize="hasRole('SERVICE_AGENT')">Service agent</span>
+                <span sec:authorize="hasRole('INVESTIGATOR')">Fraud investigator</span>
+                <span sec:authorize="hasRole('REVIEWER')">Dispute reviewer</span>
+                <span sec:authorize="hasRole('AUDITOR')">Team lead / auditor</span>
+            </span>
+            <form th:action="@{/logout}" method="post" class="inline"><button type="submit" class="link-button">Sign out</button></form>
+        </div>
+    </header>
+    <div class="flash-area" aria-live="polite">
+        <p class="flash notice" role="status" th:if="${notice}" th:text="${notice}"></p>
+        <p class="flash error" role="alert" th:if="${error}" th:text="${error}"></p>
+    </div>
+</div>
+
+<section th:fragment="caseHeader" class="case-header" aria-label="Case summary">
+    <div class="case-title">
+        <h1><span th:text="${c.caseId}">CASE</span>
+            <span class="status" th:classappend="'st-' + ${c.status}" th:text="'Status: ' + ${c.status}">NEW</span></h1>
+        <p class="meta">
+            <span th:text="${c.maskedCustomerRef}"></span> ·
+            <span th:text="${c.transactionRef}"></span> ·
+            <span th:text="${#numbers.formatDecimal(c.amount, 1, 'COMMA', 2, 'POINT')} + ' ' + ${c.currency}"></span> ·
+            <span th:text="${c.paymentChannel}"></span> ·
+            <span th:text="${c.maskedMerchant}"></span> ·
+            <span th:text="${c.issueType}"></span>
+            <span th:if="${run}"> · Run <span th:text="${run.runNumber}"></span> (<span th:text="${run.effectiveMode ?: run.requestedMode}"></span>)</span>
+        </p>
+    </div>
+    <ol class="lifecycle" aria-label="Case lifecycle">
+        <li th:each="s : ${lifecycle}" th:title="${s.meaning}"
+            th:classappend="${s.current} ? 'lc-current' : (${s.allowedNext} ? 'lc-next' : (${s.reached} ? 'lc-reached' : ''))"
+            th:attr="aria-current=${s.current} ? 'step'">
+            <span th:text="${s.status}">NEW</span>
+            <small th:if="${s.current}">(current)</small>
+            <small th:if="${s.allowedNext}">(allowed next)</small>
+        </li>
+    </ol>
+    <nav class="tabs" aria-label="Case sections">
+        <a th:href="@{/cases/{id}(id=${c.caseId})}" th:classappend="${tab == 'investigation'} ? 'active'" th:attr="aria-current=${tab == 'investigation'} ? 'page'">1 · Investigation &amp; tools</a>
+        <a th:href="@{/cases/{id}/evidence(id=${c.caseId})}" th:classappend="${tab == 'evidence'} ? 'active'" th:attr="aria-current=${tab == 'evidence'} ? 'page'">2 · Evidence</a>
+        <a th:href="@{/cases/{id}/citations(id=${c.caseId})}" th:classappend="${tab == 'citations'} ? 'active'" th:attr="aria-current=${tab == 'citations'} ? 'page'">3 · Policy citations</a>
+        <a th:href="@{/cases/{id}/recommendation(id=${c.caseId})}" th:classappend="${tab == 'recommendation'} ? 'active'" th:attr="aria-current=${tab == 'recommendation'} ? 'page'">4 · Recommendation</a>
+        <a th:href="@{/cases/{id}/review(id=${c.caseId})}" th:classappend="${tab == 'review'} ? 'active'" th:attr="aria-current=${tab == 'review'} ? 'page'">5 · Human review</a>
+        <a th:href="@{/cases/{id}/audit(id=${c.caseId})}" th:classappend="${tab == 'audit'} ? 'active'" th:attr="aria-current=${tab == 'audit'} ? 'page'" sec:authorize="hasAnyRole('AUDITOR','REVIEWER')">6 · Audit</a>
+    </nav>
+</section>
+
+<span th:fragment="severity(level)" class="sev" th:classappend="'sev-' + ${level}" th:text="'Severity: ' + ${level}">HIGH</span>
+
+</body>
+</html>

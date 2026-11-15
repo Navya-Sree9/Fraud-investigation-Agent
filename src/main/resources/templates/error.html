@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error · Fraud Investigation Agent</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main id="main" class="narrow">
+    <h1>Something went wrong</h1>
+    <p th:text="'Status ' + ${status ?: ''} + ': ' + (${status == 404} ? 'the page or case was not found.' : (${status == 403} ? 'you do not have permission for this action.' : 'the request could not be completed.'))">Error</p>
+    <p>No details are shown for security reasons. Nothing was executed automatically.</p>
+    <p><a th:href="@{/cases}">Back to cases</a></p>
+</main>
+</body>
+</html>

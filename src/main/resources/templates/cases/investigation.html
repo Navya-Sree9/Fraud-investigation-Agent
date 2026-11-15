@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Investigation')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <section th:replace="~{fragments :: caseHeader}"></section>
+
+    <section class="card" aria-labelledby="run-h">
+        <h2 id="run-h">Run investigation</h2>
+        <p class="hint" th:if="${canInvestigate}" sec:authorize="!hasRole('INVESTIGATOR')">Waiting for a <strong>fraud investigator</strong> to start enrichment.</p>
+        <form th:action="@{/cases/{id}/investigate(id=${c.caseId})}" method="post" class="inline-form" th:if="${canInvestigate}" sec:authorize="hasRole('INVESTIGATOR')">
+            <label for="mode">Processor mode</label>
+            <select id="mode" name="mode">
+                <option value="" th:text="'Configured default (' + ${configuredMode} + ')'">default</option>
+                <option th:each="m : ${modes}" th:value="${m}" th:text="${m}"></option>
+            </select>
+            <button type="submit" class="primary" data-busy="Running bounded investigation...">Start investigation</button>
+        </form>
+        <p class="hint" th:unless="${canInvestigate}">Investigation can be started from NEW or INCOMPLETE states. Current status: <strong th:text="${c.status}"></strong>.</p>
+        <p class="hint">Model: <code th:text="${llmModel}"></code>. AI availability:
+            <span th:each="e : ${modeAvailability}" th:text="${e.key.key()} + '=' + (${e.value} ? 'available' : 'not configured') + ' '"></span>.
+            Rules mode is always available and is used as the safe fallback.</p>
+        <div th:if="${run}" class="run-meta">
+            <p><strong>Run <span th:text="${run.runNumber}"></span></strong> · status <span th:text="${run.status}"></span>
+                · requested <code th:text="${run.requestedMode}"></code> · effective <code th:text="${run.effectiveMode ?: 'n/a'}"></code>
+                · correlation <code th:text="${run.correlationId}"></code>
+                <span th:if="${run.modelLatencyMs}"> · model latency <span th:text="${run.modelLatencyMs}"></span> ms</span></p>
+            <p class="flash warn" role="status" th:if="${run.fallbackReason}">Fallback / safe-state note: <span th:text="${run.fallbackReason}"></span></p>
+        </div>
+    </section>
+
+    <section class="card" aria-labelledby="journey-h">
+        <h2 id="journey-h">End-to-end journey</h2>
+        <ol class="journey">
+            <li th:each="s : ${journey}" th:classappend="'js-' + ${s.status}">
+                <span class="js-badge" th:text="${s.status}">DONE</span>
+                <strong th:text="${s.number} + '. ' + ${s.stage}"></strong>
+                <span class="hint" th:text="${s.behaviour}"></span>
+                <span class="js-detail" th:text="${s.detail}"></span>
+            </li>
+        </ol>
+    </section>
+
+    <div class="two-col">
+        <section class="card" aria-labelledby="plan-h">
+            <h2 id="plan-h">Bounded investigation plan</h2>
+            <p th:if="${run}" class="goal"><strong>Goal:</strong> <span th:text="${run.investigationGoal}"></span></p>
+            <p class="empty" th:if="${#lists.isEmpty(plan)}">No plan yet. Start an investigation to create one.</p>
+            <ol th:unless="${#lists.isEmpty(plan)}">
+                <li th:each="s : ${plan}"><code th:text="${s.toolName}"></code> - <span th:text="${s.purpose}"></span></li>
+            </ol>
+        </section>
+        <section class="card" aria-labelledby="open-h">
+            <h2 id="open-h">Unresolved questions</h2>
+            <p class="empty" th:if="${rec == null}">Available after a recommendation is produced.</p>
+            <ul th:if="${rec != null}">
+                <li th:each="m : ${rec.missingInformation}" th:text="${m}"></li>
+                <li th:each="x : ${rec.contradictions}" th:text="'Contradiction: ' + ${x}"></li>
+                <li th:if="${#lists.isEmpty(rec.missingInformation) and #lists.isEmpty(rec.contradictions)}">None recorded.</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="card" aria-labelledby="trace-h">
+        <h2 id="trace-h">Tool execution trace</h2>
+        <p class="hint">Operational trace only: tool, caller, status, duration and redacted result summary. Hidden model reasoning is never shown.</p>
+        <p class="empty" th:if="${#lists.isEmpty(traces)}">No tool calls recorded for this run.</p>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(traces)}">
+            <table>
+                <caption class="sr-only">Tool calls in execution order</caption>
+                <thead><tr><th scope="col">Trace</th><th scope="col">Tool</th><th scope="col">Invoked by</th><th scope="col">Status</th>
+                    <th scope="col">Duration</th><th scope="col">Result summary</th></tr></thead>
+                <tbody>
+                <tr th:each="t : ${traces}" th:id="${t.traceId}">
+                    <td><code th:text="${t.traceId}"></code></td>
+                    <td><code th:text="${t.toolName}"></code></td>
+                    <td th:text="${t.invokedBy}"></td>
+                    <td><span class="tool-status" th:classappend="'ts-' + ${t.status}" th:text="${t.status}"></span></td>
+                    <td th:text="${t.durationMs} + ' ms'"></td>
+                    <td>
+                        <span th:text="${t.resultSummary}"></span>
+                        <details th:if="${t.resultJson}">
+                            <summary>Open redacted result</summary>
+                            <p class="hint">Args (redacted): <code th:text="${t.argumentsSummary}"></code> · request hash <code th:text="${#strings.substring(t.requestHash,0,12)}"></code></p>
+                            <pre th:text="${t.resultJson}"></pre>
+                        </details>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card" id="follow-up" aria-labelledby="chat-h">
+        <h2 id="chat-h">Case-scoped follow-up</h2>
+        <p class="hint">Memory is keyed to <strong th:text="${c.caseId}"></strong> only (last 12 messages). Answers cite evidence, trace and chunk IDs; unverified references are removed. Follow-ups cannot change the recommendation or case state.</p>
+        <p class="empty" th:if="${#lists.isEmpty(messages)}">No questions asked yet.</p>
+        <ol class="chat" th:unless="${#lists.isEmpty(messages)}">
+            <li th:each="m : ${messages}" th:classappend="${m.role == 'USER'} ? 'from-user' : 'from-assistant'">
+                <span class="who" th:text="${m.role == 'USER'} ? 'Investigator' : 'Assistant (' + ${m.author} + ')'"></span>
+                <span th:text="${m.content}"></span>
+            </li>
+        </ol>
+        <form th:action="@{/cases/{id}/messages(id=${c.caseId})}" method="post" class="inline-form" sec:authorize="hasAnyRole('INVESTIGATOR','REVIEWER')">
+            <label for="question">Question</label>
+            <input id="question" name="question" maxlength="500" required placeholder="Which evidence supports the location anomaly?">
+            <button type="submit" class="secondary" data-busy="Asking...">Ask</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

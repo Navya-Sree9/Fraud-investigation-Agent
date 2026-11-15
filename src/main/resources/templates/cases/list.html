@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Cases')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <div class="row-between">
+        <h1>Fraud &amp; dispute cases</h1>
+        <a class="button primary" th:href="@{/cases/new}" sec:authorize="hasAnyRole('SERVICE_AGENT','INVESTIGATOR')">New case</a>
+    </div>
+    <p class="empty" th:if="${#lists.isEmpty(cases)}">No cases yet. Create one from the intake screen.</p>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(cases)}">
+        <table>
+            <caption class="sr-only">Cases, newest first</caption>
+            <thead><tr><th scope="col">Case</th><th scope="col">Status</th><th scope="col">Issue</th><th scope="col">Transaction</th>
+                <th scope="col">Amount</th><th scope="col">Customer</th><th scope="col">Reported</th><th scope="col">Created by</th></tr></thead>
+            <tbody>
+            <tr th:each="k : ${cases}">
+                <td><a th:href="@{/cases/{id}(id=${k.caseId})}" th:text="${k.caseId}"></a></td>
+                <td><span class="status" th:classappend="'st-' + ${k.status}" th:text="${k.status}"></span></td>
+                <td th:text="${k.issueType}"></td>
+                <td th:text="${k.transactionRef}"></td>
+                <td th:text="${#numbers.formatDecimal(k.amount, 1, 'COMMA', 2, 'POINT')} + ' ' + ${k.currency}"></td>
+                <td th:text="${k.maskedCustomerRef}"></td>
+                <td th:text="${#temporals.format(k.reportedAt, 'yyyy-MM-dd HH:mm')} + ' UTC'"></td>
+                <td th:text="${k.createdBy}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

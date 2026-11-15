@@ -1,0 +1,5 @@
+package com.capstone.fraudcase.domain;
+
+public enum EvidenceType {
+    CUSTOMER_STATEMENT, TRANSACTION, DEVICE, LOCATION, MERCHANT, PRIOR_DISPUTES, VELOCITY, COMPLIANCE, SLA, POLICY, SECURITY_FLAG
+}

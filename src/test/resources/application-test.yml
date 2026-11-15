@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:fraud-${random.uuid};DB_CLOSE_DELAY=-1
+  thymeleaf:
+    cache: true
+
+capstone:
+  processor-mode: rules
+  llm:
+    # Tests never call a live model: credentials are forced blank; AI adapters are exercised with scripted models.
+    api-key: ""
+  tools:
+    timeout-ms: 400
+  security:
+    agent-password: agent-test
+    investigator-password: investigator-test
+    reviewer-password: reviewer-test
+    auditor-password: auditor-test

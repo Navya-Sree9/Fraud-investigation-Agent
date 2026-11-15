@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Case audit')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <section th:replace="~{fragments :: caseHeader}"></section>
+    <p class="flash notice" role="status" th:if="${chainBreak == null}">Audit hash chain verified: intact.</p>
+    <p class="flash error" role="alert" th:if="${chainBreak != null}" th:text="'Audit hash chain broken at ' + ${chainBreak}"></p>
+    <div th:replace="~{audit :: table(${events})}"></div>
+</main>
+</body>
+</html>

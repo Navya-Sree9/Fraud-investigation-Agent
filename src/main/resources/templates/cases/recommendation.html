@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Recommendation')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <section th:replace="~{fragments :: caseHeader}"></section>
+    <p class="empty" th:if="${rec == null}">No validated recommendation for the latest run. Invalid output is never displayed or stored.</p>
+    <th:block th:if="${rec != null}">
+        <div class="flash advisory" role="note"><strong>Advisory only.</strong> Human review required: <strong th:text="${rec.humanReviewRequired} ? 'YES' : 'NO'"></strong>.
+            No action has been taken on the card, account, funds or customer.</div>
+        <section class="card" aria-labelledby="r-h">
+            <h2 id="r-h">Structured recommendation <code th:text="${rec.recommendationId}"></code></h2>
+            <dl class="kv big">
+                <dt>Classification</dt><dd th:text="${rec.classification}"></dd>
+                <dt>Risk level</dt><dd><span class="sev" th:classappend="'sev-' + ${rec.riskLevel}" th:text="${rec.riskLevel}"></span></dd>
+                <dt>Recommended route</dt><dd th:text="${rec.recommendedRoute}"></dd>
+                <dt>Confidence</dt><dd><span th:text="${#numbers.formatDecimal(rec.confidence, 1, 2)}"></span>
+                    <meter min="0" max="1" th:value="${rec.confidence}" th:attr="aria-label='confidence ' + ${rec.confidence}"></meter></dd>
+                <dt>Priority / SLA</dt><dd th:text="(${rec.priority} ?: 'n/a') + ' · target ' + (${rec.slaTargetAt} != null ? ${#temporals.format(rec.slaTargetAt, 'yyyy-MM-dd HH:mm')} + ' UTC' : 'n/a') + ' (' + (${rec.slaTraceId} ?: '') + ')'"></dd>
+                <dt>Processor</dt><dd th:text="${rec.mode}"></dd>
+                <dt>Schema validation</dt><dd>Passed (output hash <code th:text="${#strings.substring(rec.outputHash,0,16)}"></code>)</dd>
+            </dl>
+            <h3>Rationale</h3>
+            <p class="rationale" th:text="${rec.rationale}"></p>
+        </section>
+        <div class="two-col">
+            <section class="card" aria-labelledby="ev-h">
+                <h3 id="ev-h">Linked evidence</h3>
+                <ul>
+                    <li th:each="id : ${rec.evidenceIds}" th:with="e=${evidenceById[id]}">
+                        <a th:href="@{/cases/{c}/evidence(c=${c.caseId})} + '#' + ${id}" th:text="${id}"></a>
+                        <span th:if="${e}" th:text="' - ' + ${e.type} + ' (' + ${e.severity} + ', ' + ${e.provenance} + '): ' + ${e.valueSummary}"></span>
+                    </li>
+                    <li th:if="${#lists.isEmpty(rec.evidenceIds)}">No evidence linked (insufficient-evidence outcome).</li>
+                </ul>
+            </section>
+            <section class="card" aria-labelledby="ci-h">
+                <h3 id="ci-h">Policy citations</h3>
+                <ul>
+                    <li th:each="p : ${rec.policyCitations}">
+                        <a th:href="@{/cases/{c}/citations(c=${c.caseId})} + '#' + ${p.chunkId}" th:text="${p.documentId} + ' v' + ${p.version}"></a>
+                        <span th:text="' s.' + ${p.section} + ' [' + ${p.chunkId} + '] score ' + ${#numbers.formatDecimal(p.score, 1, 4)}"></span></li>
+                    <li th:if="${#lists.isEmpty(rec.policyCitations)}"><strong>Abstained:</strong> no policy passage met the threshold; no procedure asserted.</li>
+                </ul>
+            </section>
+        </div>
+        <div class="two-col">
+            <section class="card" aria-labelledby="mi-h">
+                <h3 id="mi-h">Missing information</h3>
+                <ul><li th:each="m : ${rec.missingInformation}" th:text="${m}"></li>
+                    <li th:if="${#lists.isEmpty(rec.missingInformation)}">None recorded.</li></ul>
+                <h3>Contradictions</h3>
+                <ul><li th:each="x : ${rec.contradictions}" th:text="${x}"></li>
+                    <li th:if="${#lists.isEmpty(rec.contradictions)}">None recorded.</li></ul>
+            </section>
+            <section class="card" aria-labelledby="ru-h">
+                <h3 id="ru-h">Rules and input facts</h3>
+                <p>Rule IDs: <code th:text="${#lists.isEmpty(rec.ruleIds)} ? 'none (model-generated)' : ${#strings.listJoin(rec.ruleIds, ', ')}"></code></p>
+                <ul class="facts"><li th:each="f : ${rec.inputFacts}"><code th:text="${f}"></code></li></ul>
+                <p>Tool traces: <span th:each="t : ${rec.toolTraceIds}"><a th:href="@{/cases/{c}(c=${c.caseId})} + '#' + ${t}" th:text="${t}"></a> </span></p>
+            </section>
+        </div>
+        <p><a class="button primary" th:href="@{/cases/{id}/review(id=${c.caseId})}">Go to human review</a></p>
+    </th:block>
+</main>
+</body>
+</html>

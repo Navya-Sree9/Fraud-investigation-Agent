@@ -1,0 +1,28 @@
+# Example configuration with placeholders only. Real values come from environment variables or a git-ignored .env.
+capstone:
+  processor-mode: spring-ai          # rules | spring-ai | langchain4j
+  human-review-required: true        # startup fails if false
+  allow-financial-actions: false     # startup fails if true
+  allow-customer-contact: false      # startup fails if true
+  fallback-to-rules-on-model-failure: true
+  retrieval:
+    top-k: 4
+    similarity-threshold: 0.72       # (cosine + 1) / 2 relevance score
+  memory:
+    max-messages: 12
+  tools:
+    timeout-ms: 2500
+    deterministic-seed: fraud-training-v1
+    max-model-tool-calls: 8
+  llm:
+    base-url: https://llmgw-wp.tekstac.com   # OpenAI-compatible gateway host (no /v1)
+    api-key: <set FRAUD_LLM_API_KEY>
+    model: global.anthropic.claude-haiku-4-5-20251001-v1:0
+    temperature: 0.0
+    max-tokens: 2500
+    timeout-seconds: 120
+  security:
+    agent-password: <set FRAUD_AGENT_PASSWORD>
+    investigator-password: <set FRAUD_INVESTIGATOR_PASSWORD>
+    reviewer-password: <set FRAUD_REVIEWER_PASSWORD>
+    auditor-password: <set FRAUD_AUDITOR_PASSWORD>

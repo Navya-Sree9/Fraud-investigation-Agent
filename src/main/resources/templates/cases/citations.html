@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Policy citations')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <section th:replace="~{fragments :: caseHeader}"></section>
+    <p class="empty" th:if="${run == null}">No retrieval yet. Start an investigation first.</p>
+    <section class="card" th:if="${run != null}" aria-labelledby="q-h">
+        <h2 id="q-h">Retrieval context</h2>
+        <dl class="kv">
+            <dt>Query</dt><dd th:text="${run.policyQuery}"></dd>
+            <dt>Top-K</dt><dd th:text="${run.topK}"></dd>
+            <dt>Similarity threshold</dt><dd th:text="${run.threshold}"></dd>
+            <dt>Status</dt><dd th:text="${run.retrievalStatus}"></dd>
+            <dt>Score</dt><dd>cosine similarity rescaled to 0-1 ((cos+1)/2), all-MiniLM-L6-v2</dd>
+        </dl>
+        <div class="flash warn" role="status" th:if="${run.retrievalStatus != 'MATCHED'}">
+            <strong>Abstention:</strong> no approved policy passage met the threshold (status <span th:text="${run.retrievalStatus}"></span>).
+            No procedure is asserted for this case; it is routed to manual review.
+        </div>
+    </section>
+    <section class="card" th:if="${run != null}" aria-labelledby="c-h">
+        <h2 id="c-h">Retrieved passages</h2>
+        <p class="empty" th:if="${#lists.isEmpty(citations)}">No passages returned.</p>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(citations)}">
+            <table>
+                <caption class="sr-only">Top-K passages by score</caption>
+                <thead><tr><th scope="col">Document</th><th scope="col">Version</th><th scope="col">Effective</th><th scope="col">Section</th>
+                    <th scope="col">Chunk</th><th scope="col">Score</th><th scope="col">Use</th><th scope="col">Passage</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${citations}" th:id="${p.chunkId}" th:classappend="${!p.aboveThreshold} ? 'below'">
+                    <td><strong th:text="${p.documentId}"></strong><br><small th:text="${p.title}"></small></td>
+                    <td th:text="${p.version}"></td>
+                    <td th:text="${p.effectiveDate}"></td>
+                    <td th:text="${p.section}"></td>
+                    <td><code th:text="${p.chunkId}"></code></td>
+                    <td th:text="${#numbers.formatDecimal(p.score, 1, 4)}"></td>
+                    <td><span th:if="${p.cited}" class="tag ok">Cited by recommendation</span>
+                        <span th:if="${p.aboveThreshold and !p.cited}" class="tag">Above threshold</span>
+                        <span th:unless="${p.aboveThreshold}" class="tag muted">Below threshold - not used</span></td>
+                    <td><details><summary>Open passage</summary><blockquote th:text="${p.passage}"></blockquote></details></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <section class="card" aria-labelledby="u-h">
+        <h2 id="u-h">Unavailable policy versions</h2>
+        <p class="hint">Withdrawn, superseded or not-yet-effective versions are excluded from retrieval and can never be cited.</p>
+        <p class="empty" th:if="${#lists.isEmpty(unavailablePolicies)}">None.</p>
+        <ul>
+            <li th:each="d : ${unavailablePolicies}"><span class="tag muted" th:text="${d.availability}"></span>
+                <strong th:text="${d.documentId}"></strong> v<span th:text="${d.version}"></span> - <span th:text="${d.title}"></span>
+                (effective <span th:text="${d.effectiveDate}"></span>)</li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

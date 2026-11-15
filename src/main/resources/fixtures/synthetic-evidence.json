@@ -1,0 +1,75 @@
+{
+  "_comment": "SYNTHETIC TRAINING DATA ONLY. Overrides keyed by transaction reference; omitted values are derived from a stable hash of (deterministic-seed, reference).",
+  "transactions": {
+    "TXN-2026-784102": {
+      "transaction": { "authOutcome": "UNAVAILABLE" },
+      "device": { "deviceKnown": false, "trustLevel": "LOW", "firstSeenMinutesBefore": 18 },
+      "location": { "distanceKm": 1420, "timeDeltaMinutes": 95, "currentRegion": "AE-DU Dubai", "anomalyLevel": "HIGH" },
+      "merchant": { "riskBand": "HIGH", "blocklistMatch": false, "category": "DIGITAL_GOODS" },
+      "velocity": { "count10Min": 6, "count60Min": 11, "count24h": 14 },
+      "screening": { "status": "CLEAR", "listType": "NONE" },
+      "priorDisputes": { "count": 0, "similarCount": 0 }
+    },
+    "TXN-2026-510233": {
+      "transaction": { "authOutcome": "SUCCESS" },
+      "device": { "deviceKnown": true, "trustLevel": "HIGH", "firstSeenMinutesBefore": 302400 },
+      "location": { "distanceKm": 6, "timeDeltaMinutes": 1440, "anomalyLevel": "NONE" },
+      "merchant": { "riskBand": "LOW", "blocklistMatch": false, "category": "ELECTRONICS_RETAIL" },
+      "priorDisputes": { "count": 1, "similarCount": 0 }
+    },
+    "TXN-2026-620871": {
+      "transaction": { "authOutcome": "SUCCESS", "duplicateFingerprintMatch": true, "duplicateOfRef": "TXN-2026-620870" },
+      "device": { "deviceKnown": true, "trustLevel": "HIGH", "firstSeenMinutesBefore": 525600 },
+      "location": { "distanceKm": 2, "timeDeltaMinutes": 3, "anomalyLevel": "NONE" },
+      "merchant": { "riskBand": "LOW", "blocklistMatch": false, "category": "GROCERY" },
+      "priorDisputes": { "count": 0, "similarCount": 0 }
+    },
+    "TXN-MISSING-0001": {
+      "transaction": { "simulate": "NOT_FOUND" }
+    },
+    "TXN-2026-301990": {
+      "transaction": { "authOutcome": "SUCCESS" },
+      "device": { "deviceKnown": true, "trustLevel": "HIGH", "firstSeenMinutesBefore": 200000 },
+      "location": { "distanceKm": 4, "timeDeltaMinutes": 600, "anomalyLevel": "NONE" },
+      "merchant": { "riskBand": "LOW", "blocklistMatch": false, "category": "TRAVEL_REWARDS" },
+      "priorDisputes": { "count": 0, "similarCount": 0 }
+    },
+    "TXN-2026-730455": {
+      "transaction": { "authOutcome": "SUCCESS" },
+      "device": { "deviceKnown": true, "trustLevel": "HIGH", "firstSeenMinutesBefore": 400000 },
+      "location": { "distanceKm": 2310, "timeDeltaMinutes": 40, "currentRegion": "GB-LND London", "anomalyLevel": "HIGH" },
+      "merchant": { "riskBand": "MEDIUM", "blocklistMatch": false, "category": "FASHION_ONLINE" },
+      "priorDisputes": { "count": 0, "similarCount": 0 }
+    },
+    "TXN-2026-840119": {
+      "transaction": { "authOutcome": "SUCCESS" },
+      "device": { "deviceKnown": true, "trustLevel": "HIGH", "firstSeenMinutesBefore": 600000 },
+      "location": { "distanceKm": 3, "timeDeltaMinutes": 120, "anomalyLevel": "NONE" },
+      "merchant": { "riskBand": "LOW", "blocklistMatch": false, "category": "STREAMING_SUBSCRIPTION" },
+      "priorDisputes": { "count": 3, "similarCount": 3 }
+    },
+    "TXN-2026-950007": {
+      "transaction": { "authOutcome": "FAILED_THEN_BYPASSED" },
+      "device": { "simulate": "TIMEOUT" },
+      "location": { "distanceKm": 5120, "timeDeltaMinutes": 70, "currentRegion": "US-NY New York", "anomalyLevel": "HIGH" },
+      "merchant": { "riskBand": "HIGH", "blocklistMatch": true, "category": "GIFT_CARDS" },
+      "priorDisputes": { "count": 0, "similarCount": 0 }
+    },
+    "TXN-2026-118204": {
+      "transaction": { "authOutcome": "UNAVAILABLE" },
+      "device": { "deviceKnown": false, "trustLevel": "LOW", "firstSeenMinutesBefore": 30 },
+      "location": { "distanceKm": 980, "timeDeltaMinutes": 60, "currentRegion": "TH-BKK Bangkok", "anomalyLevel": "HIGH" },
+      "merchant": { "riskBand": "MEDIUM", "blocklistMatch": false, "category": "DIGITAL_GOODS" },
+      "priorDisputes": { "count": 0, "similarCount": 0 }
+    },
+    "TXN-2026-777301": {
+      "transaction": { "authOutcome": "SUCCESS" },
+      "device": { "deviceKnown": true, "trustLevel": "MEDIUM", "firstSeenMinutesBefore": 90000 },
+      "location": { "distanceKm": 25, "timeDeltaMinutes": 300, "anomalyLevel": "LOW" },
+      "merchant": { "riskBand": "MEDIUM", "blocklistMatch": false, "category": "IMPORT_EXPORT" },
+      "velocity": { "count10Min": 2, "count60Min": 3, "count24h": 5 },
+      "screening": { "status": "CONFIRMED_MATCH", "listType": "SANCTIONS_SYNTHETIC", "matchScore": 0.94 },
+      "priorDisputes": { "count": 0, "similarCount": 0 }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+spring:
+  application:
+    name: fraud-case-agent
+  # Local, untracked secrets file (KEY=value lines). See .env.example. Never commit .env.
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${FRAUD_DB_URL:jdbc:h2:file:./data/fraudcase;DB_CLOSE_ON_EXIT=FALSE}
+    username: sa
+    password: ""
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        timezone:
+          default_storage: NATIVE
+  flyway:
+    enabled: true
+  thymeleaf:
+    cache: false
+  jackson:
+    deserialization:
+      # Reject unexpected fields (e.g. an attempted raw card number) instead of silently ignoring them.
+      fail-on-unknown-properties: true
+  h2:
+    console:
+      enabled: false
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-exception: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+
+logging:
+  pattern:
+    level: "%5p [corr=%X{correlationId:-none}]"
+  level:
+    root: INFO
+    com.capstone.fraudcase: INFO
+
+capstone:
+  processor-mode: ${FRAUD_PROCESSOR_MODE:spring-ai}   # rules | spring-ai | langchain4j
+  human-review-required: true
+  allow-financial-actions: false
+  allow-customer-contact: false
+  fallback-to-rules-on-model-failure: true
+  retrieval:
+    top-k: 4
+    similarity-threshold: 0.72
+  memory:
+    max-messages: 12
+  tools:
+    timeout-ms: 2500
+    deterministic-seed: fraud-training-v1
+    max-model-tool-calls: 8
+  llm:
+    # OpenAI-compatible gateway in front of Anthropic Claude. Host only; adapters add the API path.
+    base-url: ${FRAUD_LLM_BASE_URL:https://llmgw-wp.tekstac.com}
+    api-key: ${FRAUD_LLM_API_KEY:}
+    model: ${FRAUD_LLM_MODEL:global.anthropic.claude-haiku-4-5-20251001-v1:0}
+    temperature: 0.0
+    max-tokens: 2500
+    timeout-seconds: 120
+  security:
+    # Synthetic local demo identities. Override through environment variables outside the lab.
+    agent-password: ${FRAUD_AGENT_PASSWORD:agent-demo}
+    investigator-password: ${FRAUD_INVESTIGATOR_PASSWORD:investigator-demo}
+    reviewer-password: ${FRAUD_REVIEWER_PASSWORD:reviewer-demo}
+    auditor-password: ${FRAUD_AUDITOR_PASSWORD:auditor-demo}

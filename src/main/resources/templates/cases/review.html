@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Human review')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <section th:replace="~{fragments :: caseHeader}"></section>
+    <div class="two-col">
+        <section class="card" aria-labelledby="ar-h">
+            <h2 id="ar-h">Agent recommendation (advisory)</h2>
+            <p class="empty" th:if="${rec == null}">No validated recommendation available.</p>
+            <dl class="kv" th:if="${rec != null}">
+                <dt>Classification</dt><dd th:text="${rec.classification}"></dd>
+                <dt>Route</dt><dd th:text="${rec.recommendedRoute}"></dd>
+                <dt>Risk</dt><dd th:text="${rec.riskLevel}"></dd>
+                <dt>Confidence</dt><dd th:text="${#numbers.formatDecimal(rec.confidence, 1, 2)}"></dd>
+                <dt>Processor</dt><dd th:text="${rec.mode}"></dd>
+            </dl>
+            <p th:if="${rec != null}" class="rationale" th:text="${rec.rationale}"></p>
+            <div th:if="${rec != null and !#lists.isEmpty(rec.missingInformation)}" class="flash warn" role="note">
+                <strong>Missing information:</strong>
+                <ul><li th:each="m : ${rec.missingInformation}" th:text="${m}"></li></ul>
+            </div>
+        </section>
+        <section class="card" aria-labelledby="ap-h">
+            <h2 id="ap-h">Audit preview (latest events)</h2>
+            <ol class="audit-mini">
+                <li th:each="a : ${auditPreview}"><code th:text="${a.eventId}"></code> <strong th:text="${a.eventType}"></strong>
+                    <span th:text="${a.actorType} + '/' + ${a.actorId}"></span> - <span th:text="${a.summary}"></span></li>
+            </ol>
+        </section>
+    </div>
+
+    <section class="card" aria-labelledby="d-h">
+        <h2 id="d-h">Reviewer disposition</h2>
+        <div sec:authorize="!hasRole('REVIEWER')" class="flash warn" role="note">Only a <strong>dispute reviewer</strong> can start a review and submit a disposition.</div>
+        <form th:action="@{/cases/{id}/review/start(id=${c.caseId})}" method="post" sec:authorize="hasRole('REVIEWER')"
+              th:if="${c.status.name() == 'READY_FOR_REVIEW'}" class="card muted">
+            <p>The case is <strong>READY_FOR_REVIEW</strong>. Start the review to take ownership; the case moves to <strong>UNDER_REVIEW</strong> (audited).</p>
+            <button type="submit" class="primary">Start review</button>
+        </form>
+        <p class="hint" th:if="${c.status.name() == 'NEW' or c.status.name() == 'ENRICHING'}">A disposition is possible once a validated recommendation exists (READY_FOR_REVIEW) or the case is INCOMPLETE.</p>
+        <div class="flash error" role="alert" th:if="${errors != null and !errors.isEmpty()}" tabindex="-1" id="error-summary">
+            <p><strong>Submission blocked:</strong></p>
+            <ul><li th:each="e : ${errors}" th:text="${e.key} + ': ' + ${e.value}"></li></ul>
+        </div>
+        <p class="hint" th:if="${c.status.name() == 'CLOSED'}">This case is CLOSED. No further dispositions are possible.</p>
+        <form th:action="@{/cases/{id}/review(id=${c.caseId})}" method="post" sec:authorize="hasRole('REVIEWER')" th:if="${c.status.name() == 'UNDER_REVIEW' or c.status.name() == 'ROUTED' or c.status.name() == 'INCOMPLETE'}" class="review-form">
+            <fieldset>
+                <legend>Disposition *</legend>
+                <div class="radio" th:each="d : ${dispositions}">
+                    <input type="radio" name="disposition" th:id="'d-' + ${d}" th:value="${d}" required>
+                    <label th:for="'d-' + ${d}" th:text="${d}"></label>
+                </div>
+                <p class="hint">UNDER_REVIEW: ACCEPT / REROUTE / ESCALATE / REQUEST_INFORMATION lead to ROUTED; CLOSE_OVERRIDE leads to CLOSED.
+                    ROUTED or INCOMPLETE: CLOSE leads to CLOSED (an investigator may instead re-run enrichment on an INCOMPLETE case).</p>
+            </fieldset>
+            <div class="field">
+                <label for="selectedRoute">Route (required for REROUTE)</label>
+                <select id="selectedRoute" name="selectedRoute">
+                    <option value="">-</option>
+                    <option th:each="r : ${routes}" th:value="${r}" th:text="${r}"></option>
+                </select>
+            </div>
+            <div class="field wide" th:classappend="${errors?.containsKey('reason')} ? 'invalid'">
+                <label for="reason">Reviewer rationale * (minimum 15 characters)</label>
+                <textarea id="reason" name="reason" rows="4" maxlength="2000" required th:text="${reasonValue}"></textarea>
+            </div>
+            <fieldset>
+                <legend>Checklist *</legend>
+                <div class="check"><input type="checkbox" id="evidenceReviewed" name="evidenceReviewed" value="true"><label for="evidenceReviewed">I reviewed the evidence and its provenance</label></div>
+                <div class="check"><input type="checkbox" id="citationsReviewed" name="citationsReviewed" value="true"><label for="citationsReviewed">I reviewed the policy citations (or the abstention)</label></div>
+                <div class="check"><input type="checkbox" id="missingInfoAcknowledged" name="missingInfoAcknowledged" value="true"><label for="missingInfoAcknowledged">I acknowledge the listed missing information</label></div>
+            </fieldset>
+            <p class="hint">Submitting records your identity, timestamp, disposition and rationale in the append-only audit trail. It does not block cards, refund, move funds or contact the customer.</p>
+            <button type="submit" class="primary">Submit disposition</button>
+        </form>
+    </section>
+
+    <section class="card" aria-labelledby="h-h">
+        <h2 id="h-h">Review history</h2>
+        <p class="empty" th:if="${#lists.isEmpty(reviews)}">No dispositions recorded.</p>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(reviews)}">
+            <table>
+                <thead><tr><th scope="col">Review</th><th scope="col">Reviewer</th><th scope="col">Disposition</th><th scope="col">Route</th>
+                    <th scope="col">Resulting status</th><th scope="col">Reason</th><th scope="col">Recorded</th></tr></thead>
+                <tbody><tr th:each="r : ${reviews}">
+                    <td th:text="${r.reviewId}"></td><td th:text="${r.reviewerId}"></td><td th:text="${r.disposition}"></td>
+                    <td th:text="${r.selectedRoute ?: '-'}"></td><td th:text="${r.resultingStatus}"></td><td th:text="${r.reason}"></td>
+                    <td th:text="${#temporals.format(r.recordedAt, 'yyyy-MM-dd HH:mm:ss')} + ' UTC'"></td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

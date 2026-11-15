@@ -1,0 +1,20 @@
+INVESTIGATION GOAL
+{{investigationGoal}}
+
+CASE SUMMARY (validated, masked intake; provenance USER_INTAKE)
+{{caseSummary}}
+
+BOUNDED INVESTIGATION PLAN (selected by the application)
+{{plan}}
+
+TOOL EVIDENCE (provenance TOOL_RESULT unless stated)
+{{toolEvidence}}
+
+POLICY CONTEXT (retrieval: top-k={{topK}}, threshold={{threshold}}, status={{retrievalStatus}})
+{{policyContext}}
+
+SECURITY NOTES
+{{securityNotes}}
+
+OUTPUT SCHEMA (respond with a single JSON object matching this schema)
+{{outputSchema}}

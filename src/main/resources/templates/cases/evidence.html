@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Evidence')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <section th:replace="~{fragments :: caseHeader}"></section>
+    <p class="empty" th:if="${#lists.isEmpty(observed) and #lists.isEmpty(claims)}">No evidence yet. Start an investigation first.</p>
+
+    <section aria-labelledby="claims-h" th:unless="${#lists.isEmpty(claims)}">
+        <h2 id="claims-h">Customer claims <span class="prov">provenance: USER_INTAKE (unverified)</span></h2>
+        <div class="cards">
+            <article class="evidence-card claim" th:each="e : ${claims}" th:id="${e.evidenceId}">
+                <header><strong th:text="${e.evidenceId}"></strong> · <span th:text="${e.type}"></span>
+                    <span th:replace="~{fragments :: severity(${e.severity})}"></span></header>
+                <p th:text="${e.valueSummary}"></p>
+                <footer>Source <code th:text="${e.sourceRef}"></code> · <span th:text="${#temporals.format(e.observedAt, 'yyyy-MM-dd HH:mm:ss')} + ' UTC'"></span></footer>
+                <details><summary>Open intake record</summary>
+                    <pre th:text="'issueType: ' + ${c.issueType} + '&#10;merchantRecognised: ' + ${c.merchantRecognised} + '&#10;cardPossession: ' + ${c.cardPossession} + '&#10;statement (sanitised): ' + ${c.customerStatement}"></pre>
+                </details>
+            </article>
+        </div>
+    </section>
+
+    <section aria-labelledby="flags-h" th:unless="${#lists.isEmpty(flags)}">
+        <h2 id="flags-h">Security flags <span class="prov">provenance: SYSTEM</span></h2>
+        <div class="cards">
+            <article class="evidence-card flag" th:each="e : ${flags}" th:id="${e.evidenceId}">
+                <header><strong th:text="${e.evidenceId}"></strong> · <span th:text="${e.type}"></span>
+                    <span th:replace="~{fragments :: severity(${e.severity})}"></span></header>
+                <p th:text="${e.valueSummary}"></p>
+            </article>
+        </div>
+    </section>
+
+    <section aria-labelledby="obs-h" th:unless="${#lists.isEmpty(observed)}">
+        <h2 id="obs-h">Tool-observed evidence <span class="prov">provenance: TOOL_RESULT</span></h2>
+        <div class="cards">
+            <article class="evidence-card" th:each="e : ${observed}" th:id="${e.evidenceId}" th:classappend="${!e.available} ? 'unavailable'">
+                <header><strong th:text="${e.evidenceId}"></strong> · <span th:text="${e.type}"></span>
+                    <span th:replace="~{fragments :: severity(${e.severity})}"></span>
+                    <span class="tag" th:unless="${e.available}">UNAVAILABLE</span></header>
+                <p th:text="${e.valueSummary}"></p>
+                <footer>Trace <a th:href="@{/cases/{id}(id=${c.caseId})} + '#' + ${e.sourceRef}" th:text="${e.sourceRef}"></a>
+                    · <span th:text="${#temporals.format(e.observedAt, 'yyyy-MM-dd HH:mm:ss')} + ' UTC'"></span></footer>
+                <details th:with="t=${tracesById[e.sourceRef]}" th:if="${t != null}">
+                    <summary>Open underlying redacted tool result</summary>
+                    <p class="hint"><code th:text="${t.toolName}"></code> · <span th:text="${t.status}"></span> · <span th:text="${t.durationMs} + ' ms'"></span> · invoked by <span th:text="${t.invokedBy}"></span></p>
+                    <pre th:text="${t.resultJson ?: t.resultSummary}"></pre>
+                </details>
+            </article>
+        </div>
+    </section>
+
+    <section aria-labelledby="gen-h" th:if="${rec != null}">
+        <h2 id="gen-h">Generated summary <span class="prov" th:text="'provenance: ' + (${#strings.startsWith(rec.mode,'rules')} ? 'RULES_ENGINE' : 'MODEL_SUMMARY') + ' (' + ${rec.mode} + ')'"></span></h2>
+        <article class="evidence-card generated"><p th:text="${rec.rationale}"></p>
+            <footer><a th:href="@{/cases/{id}/recommendation(id=${c.caseId})}">Open structured recommendation</a></footer></article>
+    </section>
+</main>
+</body>
+</html>

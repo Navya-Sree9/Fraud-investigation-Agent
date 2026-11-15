@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Sign in')}"></head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="synthetic-banner" role="note">SYNTHETIC TRAINING DATA ONLY</div>
+<main id="main" class="narrow">
+    <h1>Sign in</h1>
+    <p class="flash error" role="alert" th:if="${param.error}">Invalid username or password.</p>
+    <p class="flash notice" role="status" th:if="${param.logout}">You have been signed out.</p>
+    <form th:action="@{/login}" method="post" class="card">
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" required autofocus>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button type="submit" class="primary">Sign in</button>
+    </form>
+    <section class="card muted" aria-label="Demo identities">
+        <h2>Local demo personas (synthetic)</h2>
+        <ul>
+            <li><strong>agent</strong> - service agent: guided intake, masking, visible missing-information list</li>
+            <li><strong>investigator</strong> - fraud investigator: intake, tool-driven enrichment, evidence and trace, follow-ups</li>
+            <li><strong>reviewer</strong> - dispute reviewer: starts review, dispositions with rationale, follow-ups, audit</li>
+            <li><strong>auditor</strong> - team lead / auditor: read-only, audit trail and health details</li>
+        </ul>
+        <p>Passwords are configured through <code>FRAUD_*_PASSWORD</code> environment variables (see README).</p>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Policy library')}"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main id="main">
+    <h1>Synthetic policy library</h1>
+    <p class="hint">Retrieval: Top-K <strong th:text="${topK}"></strong>, threshold <strong th:text="${threshold}"></strong>. Only ACTIVE versions are embedded and citable.</p>
+    <div class="flash error" role="alert" th:unless="${#lists.isEmpty(rejected)}">
+        <strong>Rejected documents (failed metadata validation):</strong>
+        <ul><li th:each="r : ${rejected}" th:text="${r}"></li></ul>
+    </div>
+    <section class="card" th:each="d : ${documents}" th:aria-label="${d.documentId}">
+        <h2><span th:text="${d.documentId}"></span> v<span th:text="${d.version}"></span> - <span th:text="${d.title}"></span>
+            <span class="tag" th:classappend="${d.retrievable} ? 'ok' : 'muted'" th:text="${d.availability}"></span></h2>
+        <p class="meta">Effective <span th:text="${d.effectiveDate}"></span> · owner <span th:text="${d.owner}"></span> · <span th:text="${d.classification}"></span> · source <code th:text="${d.sourceFile}"></code></p>
+        <details th:each="ch : ${d.chunks}"><summary th:text="'[' + ${ch.chunkId} + '] ' + ${ch.section}"></summary><blockquote th:text="${ch.text}"></blockquote></details>
+    </section>
+</main>
+</body>
+</html>
